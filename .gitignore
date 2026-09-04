@@ -1,0 +1,6 @@
+# runtime competition state — never commit scores
+data.json
+data.json.tmp
+
+# local backups
+*.bak

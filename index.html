@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operation Cipherfall — Scoreboard</title>
+<style>
+  :root{
+    /* black / white / green only — no gradients anywhere */
+    --bg:#000000;
+    --panel:#0a0a0a;
+    --panel-in:#050505;
+    --line:#5a5a5a;        /* component boundaries — 3.05:1 on black */
+    --line-soft:#242424;   /* internal dividers */
+    --ink:#ffffff;
+    --dim:#9a9a9a;         /* 6.1:1 on black */
+    --green:#00ff88;
+    --green-mid:#2fd486;
+    --green-low:#4ea87a;
+    --green-pale:#b9ffd8;
+    --green-bg:#0a1a10;
+    --green-line:#1f5b48;
+    --alert:#ffffff;       /* penalties/errors: white + explicit ✘ / − glyph */
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    min-height:100vh;
+    padding:22px 16px 60px;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;
+    clip:rect(0 0 0 0);white-space:nowrap}
+
+  /* ---------- header ---------- */
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;
+    border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:22px}
+  .title{font-weight:700;letter-spacing:.10em;font-size:clamp(22px,4vw,36px);
+    color:var(--ink);margin:0;line-height:1.2}
+  .title b{color:var(--green)}
+  .sub{color:var(--dim);font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-top:6px}
+  .rule{font-size:12px;color:var(--ink);letter-spacing:.03em;border:1px solid var(--line);
+    background:var(--panel);padding:10px 12px;border-radius:8px}
+  .rule b{color:var(--alert);font-weight:700}
+
+  /* ---------- cards ---------- */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 16px 18px}
+  .card h2{font-weight:700;letter-spacing:.10em;text-transform:uppercase;font-size:13px;
+    color:var(--green);margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .card h2::before{content:"▎";color:var(--green)}
+  .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+
+  /* ---------- controls ---------- */
+  .ident{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  input,select{background:var(--panel-in);border:1px solid var(--line);color:var(--ink);
+    font-family:inherit;font-size:15px;padding:10px 12px;border-radius:8px;outline:none;min-height:44px}
+  input::placeholder{color:var(--dim)}
+  input:focus-visible,select:focus-visible,button:focus-visible{
+    outline:2px solid var(--green);outline-offset:2px;border-color:var(--green)}
+  input:focus,select:focus{border-color:var(--green)}
+  button{font-family:inherit;font-weight:700;letter-spacing:.06em;cursor:pointer;
+    background:var(--panel-in);color:var(--green);border:1px solid var(--green-line);
+    padding:10px 16px;border-radius:8px;text-transform:uppercase;font-size:12px;
+    min-height:44px;transition:background .15s ease-out,border-color .15s ease-out}
+  button:hover{background:var(--green-bg);border-color:var(--green)}
+  button:active{background:#123021}
+  button.ghost{color:var(--ink);border-color:var(--line);background:var(--panel-in)}
+  button.ghost:hover{background:#141414;border-color:var(--ink)}
+  .me{font-size:14px;color:var(--dim)}
+  .me b{color:var(--green)}
+  .stat{display:inline-flex;gap:6px;align-items:baseline;margin-left:14px;font-size:13px;color:var(--dim)}
+  .stat b{font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .stat.pen b{color:var(--alert)}
+
+  /* ---------- leaderboard ---------- */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;color:var(--dim);font-weight:700;letter-spacing:.08em;font-size:10px;
+    text-transform:uppercase;padding:8px;border-bottom:1px solid var(--line)}
+  td{padding:10px 8px;border-bottom:1px solid var(--line-soft)}
+  tr.meRow td{background:var(--green-bg)}
+  .rank{color:var(--dim);width:34px;font-variant-numeric:tabular-nums}
+  .rank.g1{color:var(--green);font-weight:700}
+  .rank.g2{color:var(--ink)}
+  .rank.g3{color:var(--dim)}
+  .tname{color:var(--ink)}
+  .score{font-weight:700;color:var(--green);text-align:right;font-variant-numeric:tabular-nums}
+  .pencol{color:var(--alert);text-align:right;font-variant-numeric:tabular-nums}
+  .solvedcol{color:var(--dim);text-align:right;font-variant-numeric:tabular-nums}
+  .empty{color:var(--dim);font-size:14px;padding:16px 4px}
+
+  /* ---------- challenge board ---------- */
+  .tier{margin-top:16px}
+  .tier-h{display:flex;align-items:center;gap:10px;margin:0 0 8px;font-size:11px;
+    font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+  .tier-h .ln{flex:1;height:1px}
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media(max-width:560px){.chips{grid-template-columns:1fr}}
+  .chal{border:1px solid var(--line-soft);border-left-width:3px;border-radius:8px;
+    background:var(--panel-in);padding:10px 11px}
+  .chal .row1{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .chal .nm{font-size:14px;color:var(--ink)}
+  .chal .pts{font-size:12px;font-weight:700;color:var(--dim);white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  .chal .cat{font-size:11px;color:var(--dim);letter-spacing:.05em;text-transform:uppercase;margin-top:2px}
+  .chal .sub{display:flex;gap:8px;margin-top:10px}
+  .chal .sub input{flex:1;min-width:0;font-size:14px;padding:9px 10px}
+  .chal .sub button{padding:9px 12px;font-size:11px}
+  .chal.solved{border-left-color:var(--green)!important;background:var(--green-bg)}
+  .chal.solved .done{color:var(--green);font-size:12px;font-weight:700;letter-spacing:.04em;
+    margin-top:10px;display:flex;align-items:center;gap:6px}
+  .flash{animation:flash .5s ease-out}
+  @keyframes flash{0%{box-shadow:0 0 0 2px var(--alert) inset}100%{box-shadow:none}}
+
+  /* ---------- feedback ---------- */
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:1000;
+    padding:12px 18px;border-radius:10px;font-size:14px;font-weight:700;letter-spacing:.04em;
+    opacity:0;transition:opacity .2s ease-out;border:1px solid transparent;pointer-events:none;
+    max-width:calc(100vw - 32px);text-align:center}
+  .toast.show{opacity:1}
+  .toast.ok{background:var(--green-bg);color:var(--green);border-color:var(--green)}
+  .toast.bad{background:#141414;color:var(--alert);border-color:var(--alert)}
+  .toast.info{background:#141414;color:var(--dim);border-color:var(--line)}
+  .note{color:var(--dim);font-size:12px;line-height:1.6;margin-top:14px;
+    border-top:1px solid var(--line-soft);padding-top:12px}
+  .note b{color:var(--ink)}
+  .banner{background:#141414;border:1px solid var(--alert);color:var(--alert);font-size:13px;
+    padding:10px 12px;border-radius:8px;margin-bottom:14px;display:none}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms!important;animation-iteration-count:1!important;
+      transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1 class="title">OPERATION <b>CIPHERFALL</b> // SCOREBOARD</h1>
+      <div class="sub">30 challenges · 5 tiers · 13,500 pts · server-checked flags</div>
+    </div>
+    <div class="rule">SCORING: solved points &nbsp;<b>−1 pt</b>&nbsp; per wrong submission</div>
+  </header>
+
+  <div id="connBanner" class="banner" role="alert">⚠ Can't reach the server. Make sure <b>server.py</b> is running, then reload.</div>
+
+  <div class="card" style="margin-bottom:18px">
+    <h2>Operator Identity</h2>
+    <div id="identNone" class="ident">
+      <label for="teamName" class="sr-only">Team name</label>
+      <input id="teamName" placeholder="enter team name…" maxlength="28" autocomplete="off">
+      <button onclick="createTeam()">Register Team</button>
+      <select id="teamPick" class="ghost" aria-label="Join an existing team" style="display:none"></select>
+      <button class="ghost" id="joinBtn" onclick="joinTeam()" style="display:none">Join</button>
+    </div>
+    <div id="identMe" class="ident" style="display:none">
+      <span class="me">SIGNED IN AS &nbsp;<b id="meName">—</b></span>
+      <span class="stat">SCORE <b id="meScore">0</b></span>
+      <span class="stat">SOLVED <b id="meSolved">0/30</b></span>
+      <span class="stat pen">PENALTY <b id="mePen">0</b></span>
+      <button class="ghost" onclick="switchTeam()">Switch</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Challenge Board — Submit Flags</h2>
+      <div id="board"></div>
+      <div class="note">
+        Flag format <b>FLAG{example_flag}</b>. Flags are verified <b>on the server</b> — they are not in this
+        page at all. Every <b>incorrect</b> submission costs <b>1 point</b>; solved challenges lock.
+      </div>
+    </div>
+    <div class="card">
+      <h2>Live Leaderboard</h2>
+      <table>
+        <thead><tr><th>#</th><th>Team</th><th style="text-align:right">Solved</th><th style="text-align:right">Pen</th><th style="text-align:right">Score</th></tr></thead>
+        <tbody id="lb"></tbody>
+      </table>
+      <div id="lbEmpty" class="empty">No teams yet. Register to claim rank #1.</div>
+      <div class="note">Tie-break: highest score → fewest penalties → earliest last solve. Shared across every device pointed at this server. Auto-refreshes every 6s.</div>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ----- client state ----- */
+let DATA = {challenges:[], tiers:{}, points:{}, teams:[]};
+let MY_ID = localStorage.getItem("cipherfall_team") || null;
+/* tier ladder: dim green -> bright green -> white. No extra hues, no gradients. */
+const TIER_COLORS = {
+  "Warm-Up":"var(--green-low)",
+  "Easy":"var(--green-mid)",
+  "Medium":"var(--green)",
+  "Hard":"var(--green-pale)",
+  "Expert":"var(--ink)"
+};
+
+function toast(msg,kind){const el=document.getElementById('toast');el.textContent=msg;
+  el.className='toast '+kind+' show';clearTimeout(el._t);el._t=setTimeout(()=>el.className='toast '+kind,2200);}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function myTeam(){return DATA.teams.find(t=>t.id===MY_ID)||null;}
+
+async function api(path,method,body){
+  const opt={method:method||'GET',headers:{'Content-Type':'application/json'}};
+  if(body) opt.body=JSON.stringify(body);
+  const r=await fetch(path,opt);
+  let j={}; try{j=await r.json();}catch(_){}
+  return {ok:r.ok,status:r.status,data:j};
+}
+async function refresh(){
+  try{
+    const r=await api('/api/state');
+    if(r.ok){ DATA=r.data; document.getElementById('connBanner').style.display='none'; }
+    else throw new Error();
+  }catch(e){ document.getElementById('connBanner').style.display='block'; return; }
+}
+
+/* ----- identity ----- */
+async function createTeam(){
+  const name=document.getElementById('teamName').value.trim();
+  if(!name){toast('Enter a team name','info');return;}
+  const r=await api('/api/team','POST',{name});
+  if(r.status===409){toast('Name taken — pick another or Join','bad');return;}
+  if(!r.ok){toast('Server error','bad');return;}
+  MY_ID=r.data.id; localStorage.setItem("cipherfall_team",MY_ID);
+  document.getElementById('teamName').value='';
+  await refresh(); renderAll(); toast('Team registered — good hunting','ok');
+}
+async function joinTeam(){
+  const id=document.getElementById('teamPick').value; if(!id)return;
+  MY_ID=id; localStorage.setItem("cipherfall_team",id);
+  await refresh(); renderAll(); toast('Joined team','ok');
+}
+function switchTeam(){ MY_ID=null; localStorage.removeItem("cipherfall_team"); renderAll(); }
+
+/* ----- submission ----- */
+async function submitFlag(cid){
+  const team=myTeam(); if(!team){toast('Register or join a team first','info');return;}
+  const input=document.getElementById('in-'+cid); const flag=(input.value||'').trim();
+  if(!flag) return;
+  const r=await api('/api/submit','POST',{teamId:MY_ID,challengeId:cid,flag});
+  if(!r.ok){toast(r.data.error||'Error','bad');return;}
+  const res=r.data.result;
+  if(res==='correct'){ await refresh(); renderAll(); toast('✔ CORRECT  +'+r.data.points+' pts','ok'); }
+  else if(res==='locked'){ toast('Already solved — locked','info'); }
+  else if(res==='wrong'){
+    await refresh(); renderAll();
+    const card=document.getElementById('chal-'+cid);
+    if(card){card.classList.remove('flash');void card.offsetWidth;card.classList.add('flash');}
+    toast('✘ WRONG  −1 pt','bad');
+  } else { toast('Empty submission','info'); }
+}
+
+/* ----- rendering ----- */
+function renderIdentity(){
+  const me=myTeam();
+  document.getElementById('identNone').style.display=me?'none':'flex';
+  document.getElementById('identMe').style.display=me?'flex':'none';
+  if(me){
+    document.getElementById('meName').textContent=me.name;
+    document.getElementById('meScore').textContent=me.score;
+    document.getElementById('meSolved').textContent=(me.solved?me.solved.length:0)+'/30';
+    document.getElementById('mePen').textContent=me.wrong||0;
+  }else{
+    const pick=document.getElementById('teamPick'),join=document.getElementById('joinBtn');
+    if(DATA.teams.length){
+      pick.style.display='';join.style.display='';
+      pick.innerHTML='<option value="">— join existing —</option>'+
+        DATA.teams.slice().sort((a,b)=>a.name.localeCompare(b.name))
+          .map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
+    }else{pick.style.display='none';join.style.display='none';}
+  }
+}
+function renderBoard(){
+  const me=myTeam(); const solved=new Set(me?me.solved.map(String):[]);
+  const board=document.getElementById('board'); board.innerHTML='';
+  const order=["Warm-Up","Easy","Medium","Hard","Expert"];
+  for(const tier of order){
+    const pts=DATA.tiers[tier]; const col=TIER_COLORS[tier];
+    const items=DATA.challenges.filter(c=>c.tier===tier);
+    const wrap=document.createElement('div'); wrap.className='tier';
+    wrap.innerHTML=`<div class="tier-h" style="color:${col}">
+      <span>${tier}</span><span class="ln" style="background:${col};opacity:.4"></span>
+      <span style="color:var(--dim)">${pts} pts</span></div>`;
+    const chips=document.createElement('div'); chips.className='chips';
+    for(const c of items){
+      const done=solved.has(String(c.id));
+      const el=document.createElement('div');
+      el.className='chal'+(done?' solved':''); el.id='chal-'+c.id;
+      el.style.borderLeftColor=col;
+      el.innerHTML=`<div class="row1"><span class="nm">${c.id}. ${esc(c.t)}</span><span class="pts">${pts}</span></div>
+        <div class="cat">${esc(c.c)}</div>
+        ${done?`<div class="done">✔ SOLVED &nbsp;·&nbsp; +${pts} pts</div>`
+        :`<div class="sub"><input id="in-${c.id}" placeholder="FLAG{…}" autocomplete="off"
+            aria-label="Flag for challenge ${c.id}: ${esc(c.t)}"
+            onkeydown="if(event.key==='Enter')submitFlag(${c.id})">
+            <button onclick="submitFlag(${c.id})">Submit</button></div>`}`;
+      chips.appendChild(el);
+    }
+    wrap.appendChild(chips); board.appendChild(wrap);
+  }
+}
+function renderLeaderboard(){
+  const tb=document.getElementById('lb'),empty=document.getElementById('lbEmpty');
+  const ranked=DATA.teams.slice().sort((a,b)=>{
+    if(b.score!==a.score)return b.score-a.score;
+    if((a.wrong||0)!==(b.wrong||0))return (a.wrong||0)-(b.wrong||0);
+    return (a.lastSolve||Infinity)-(b.lastSolve||Infinity);
+  });
+  empty.style.display=ranked.length?'none':'block';
+  tb.innerHTML=ranked.map((t,i)=>{
+    const rk=i+1,g=rk<=3?` g${rk}`:'',mine=t.id===MY_ID?' meRow':'';
+    return `<tr class="${mine.trim()}">
+      <td class="rank${g}">${rk<=3?['①','②','③'][i]:rk}</td>
+      <td class="tname">${esc(t.name)}${t.id===MY_ID?' <span style="color:var(--green)">◂ you</span>':''}</td>
+      <td class="solvedcol">${t.solved?t.solved.length:0}</td>
+      <td class="pencol">${t.wrong?('−'+t.wrong):'0'}</td>
+      <td class="score">${t.score}</td></tr>`;
+  }).join('');
+}
+function renderAll(){renderIdentity();renderBoard();renderLeaderboard();}
+
+let _solvedSig='';
+async function poll(){
+  await refresh();
+  renderIdentity(); renderLeaderboard();
+  const me=myTeam(); const sig=me?me.solved.slice().sort().join(','):'';
+  if(sig!==_solvedSig){_solvedSig=sig;renderBoard();}
+}
+(async function boot(){ await refresh(); renderAll();
+  const me=myTeam(); _solvedSig=me?me.solved.slice().sort().join(','):'';
+  setInterval(poll,6000);
+})();
+</script>
+</body>
+</html>
