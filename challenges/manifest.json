@@ -1,0 +1,94 @@
+{
+  "1": {
+    "files": [
+      "briefing.txt"
+    ],
+    "note": "Decode Base64 twice (nested)."
+  },
+  "2": {
+    "files": [
+      "note.txt"
+    ],
+    "note": "Caesar/shift cipher; brute force 25 shifts."
+  },
+  "6": {
+    "files": [
+      "data.bin"
+    ],
+    "note": "strings data.bin | grep FLAG"
+  },
+  "7": {
+    "files": [
+      "rotated.txt"
+    ],
+    "note": "ROT-N brute force (not 13)."
+  },
+  "16": {
+    "files": [
+      "cipher.hex"
+    ],
+    "note": "Single-byte XOR; crib FLAG{ -> key 0x42."
+  },
+  "17": {
+    "files": [
+      "access.log"
+    ],
+    "note": "Count 401s per IP; find the one IP's single 200."
+  },
+  "22": {
+    "files": [
+      "dropper.ps1.txt"
+    ],
+    "note": "Reassemble string, Base64-decode (do NOT run). C2 URL holds flag."
+  },
+  "26": {
+    "files": [
+      "crypto_brief.txt"
+    ],
+    "note": "Reimplement LCG; brute force 16-bit seed with FLAG{ crib."
+  },
+  "4": {
+    "files": [
+      "capture.pcap"
+    ],
+    "note": "Follow HTTP stream of the POST /login."
+  },
+  "5": {
+    "files": [
+      "profile.jpg"
+    ],
+    "note": "exiftool profile.jpg -> ImageDescription/UserComment."
+  },
+  "12": {
+    "files": [
+      "leak.jpg"
+    ],
+    "note": "Read GPS EXIF -> map coords -> landmark name. Flag NOT in file."
+  },
+  "8": {
+    "files": [
+      "secret.zip",
+      "pets.txt"
+    ],
+    "note": "password = pet name + year (1990-2025). max2019. Crack with fcrackzip/John."
+  },
+  "11": {
+    "files": [
+      "office.pcap"
+    ],
+    "note": "Filter ftp/ftp-data; follow data stream (RETR flag.txt)."
+  },
+  "14": {
+    "files": [
+      "guest_token.txt",
+      "README.txt"
+    ],
+    "note": "SERVICE-DEPENDENT: crack secret (password123), forge admin token. Flag from /admin service, not the file."
+  },
+  "18": {
+    "files": [
+      "mini.dmp"
+    ],
+    "note": "strings + context: real flag is adjacent to 'MasterPassword='. Others are decoys."
+  }
+}

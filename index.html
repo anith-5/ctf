@@ -111,6 +111,13 @@
   .chal .sub{display:flex;gap:8px;margin-top:10px}
   .chal .sub input{flex:1;min-width:0;font-size:14px;padding:9px 10px}
   .chal .sub button{padding:9px 12px;font-size:11px}
+  .chal .files{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .chal .dl{font-size:11px;color:var(--green);border:1px solid var(--green-line);
+    border-radius:6px;padding:8px 11px;text-decoration:none;background:var(--panel-in);
+    display:inline-flex;align-items:center;gap:5px;line-height:1;
+    min-height:36px;box-sizing:border-box}
+  .chal .dl:hover{background:var(--green-bg);border-color:var(--green)}
+  .chal .dl:focus-visible{outline:2px solid var(--green);outline-offset:2px}
   .chal.solved{border-left-color:var(--green)!important;background:var(--green-bg)}
   .chal.solved .done{color:var(--green);font-size:12px;font-weight:700;letter-spacing:.04em;
     margin-top:10px;display:flex;align-items:center;gap:6px}
@@ -296,8 +303,12 @@ function renderBoard(){
       const el=document.createElement('div');
       el.className='chal'+(done?' solved':''); el.id='chal-'+c.id;
       el.style.borderLeftColor=col;
+      const files=(DATA.artifacts&&DATA.artifacts[c.id])||[];
+      const pad=String(c.id).padStart(2,'0');
+      const dl=files.length?`<div class="files">`+files.map(f=>
+        `<a class="dl" href="/files/${pad}/${encodeURIComponent(f)}" download aria-label="Download ${esc(f)} for challenge ${c.id}">⤓ ${esc(f)}</a>`).join('')+`</div>`:'';
       el.innerHTML=`<div class="row1"><span class="nm">${c.id}. ${esc(c.t)}</span><span class="pts">${pts}</span></div>
-        <div class="cat">${esc(c.c)}</div>
+        <div class="cat">${esc(c.c)}</div>${dl}
         ${done?`<div class="done">✔ SOLVED &nbsp;·&nbsp; +${pts} pts</div>`
         :`<div class="sub"><input id="in-${c.id}" placeholder="FLAG{…}" autocomplete="off"
             aria-label="Flag for challenge ${c.id}: ${esc(c.t)}"

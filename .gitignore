@@ -4,3 +4,7 @@ data.json.tmp
 
 # local backups
 *.bak
+
+# large regenerable challenge artifacts — rebuild with: python tools/make_artifacts.py
+challenges/17/access.log
+challenges/18/mini.dmp

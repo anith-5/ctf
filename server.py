@@ -11,14 +11,32 @@ Then open http://localhost:8000  (others on your network can use http://<your-ip
 - State persists to data.json in this folder. Delete that file to reset the event.
 """
 
-import json, hashlib, threading, os, sys
+import json, hashlib, threading, os, sys, re, mimetypes
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(HERE, "data.json")
 INDEX_FILE = os.path.join(HERE, "index.html")
+CHAL_DIR = os.path.join(HERE, "challenges")
 PORT = int(os.environ.get("PORT", "8000"))
+
+def load_artifacts():
+    """Map challenge id -> [filenames] from challenges/manifest.json (if present)."""
+    out = {}
+    try:
+        with open(os.path.join(CHAL_DIR, "manifest.json")) as f:
+            data = json.load(f)
+        for cid, info in data.items():
+            files = [fn for fn in info.get("files", [])
+                     if os.path.isfile(os.path.join(CHAL_DIR, f"{int(cid):02d}", fn))]
+            if files:
+                out[str(int(cid))] = files
+    except Exception as e:
+        print("NOTE: no challenge artifacts loaded:", e)
+    return out
+
+ARTIFACTS = load_artifacts()
 
 # ---------------------------------------------------------------------------
 # Challenge catalogue (metadata sent to clients; points used for scoring)
@@ -178,10 +196,38 @@ class Handler(BaseHTTPRequestHandler):
                 "challenges": CHALLENGES,
                 "tiers": TIERS,
                 "points": POINTS,
+                "artifacts": ARTIFACTS,
                 "teams": teams,
             })
             return
+        if path.startswith("/files/"):
+            self._serve_artifact(path[len("/files/"):])
+            return
         self._json({"error": "not found"}, 404)
+
+    def _serve_artifact(self, rel):
+        # rel like "01/briefing.txt" — strict allowlist, no path traversal
+        parts = rel.split("/")
+        if (len(parts) != 2 or not parts[0].isdigit()
+                or not re.fullmatch(r"[A-Za-z0-9._-]{1,64}", parts[1])):
+            self._json({"error": "not found"}, 404); return
+        fp = os.path.abspath(os.path.join(CHAL_DIR, parts[0], parts[1]))
+        if (not fp.startswith(os.path.abspath(CHAL_DIR) + os.sep)
+                or not os.path.isfile(fp)):
+            self._json({"error": "not found"}, 404); return
+        ctype = mimetypes.guess_type(fp)[0] or "application/octet-stream"
+        try:
+            with open(fp, "rb") as f:
+                body = f.read()
+        except OSError:
+            self._json({"error": "not found"}, 404); return
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Content-Disposition", 'attachment; filename="%s"' % parts[1])
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.end_headers()
+        self.wfile.write(body)
 
     # ---- POST ----
     def do_POST(self):

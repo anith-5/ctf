@@ -56,6 +56,29 @@ PORT=9000 python3 server.py
 - `server.py`  — the web server + API + flag checking (SHA-256 hashes live here).
 - `index.html` — the scoreboard UI (talks to the API via fetch).
 - `data.json`  — created at runtime; holds team scores. Delete to reset.
+- `challenges/` — downloadable challenge artifacts, one folder per challenge id.
+- `tools/make_artifacts.py` — regenerates the challenge artifacts (deterministic).
+
+## Challenge files
+File-based challenges serve their artifacts straight from the scoreboard: each
+challenge card shows a download link, served from `challenges/<id>/` via `/files/…`.
+
+15 challenges ship as downloadable files (all Warm-Up/Easy/Medium file challenges,
+plus a few others). The remaining challenges are **service-based** (hosted web apps,
+SSH boxes), **compiled binaries**, or **captured images** — see the design document /
+answer key for how to stand those up (CTFd + Docker is the recommended path). The
+scoreboard already scores all 30; only the file downloads for these 15 are wired in.
+
+### Rebuilding the artifacts
+Two large files (`challenges/17/access.log`, `challenges/18/mini.dmp`) are gitignored
+because they're big and regenerable. After cloning, rebuild every artifact with:
+
+```bash
+pip install pillow piexif pyzipper scapy
+python tools/make_artifacts.py
+```
+
+Generation is deterministic (fixed seed), so rebuilt files match the committed ones.
 
 ## Security note
 Flags are stored as SHA-256 hashes and verified server-side, so players can't read

@@ -1,0 +1,19 @@
+OPERATION CIPHERFALL — Cryptanalysis Brief
+==========================================
+
+A junior dev built a "one-time pad" that is really an LCG-keystream XOR cipher.
+
+Keystream (Linear Congruential Generator):
+  x_{n+1} = (a * x_n + c) mod m
+  a = 1103515245
+  c = 12345
+  m = 2147483648
+  Each step outputs one byte:  (x >> 16) & 0xFF
+  That byte is XORed against the plaintext byte.
+
+The seed is unknown but small: 0 <= seed <= 65535.
+
+Ciphertext (hex):
+  e958f315878a1a8e6030865cb0c1f3e869bb50e53b462dc1b33be7f97f536ea0c88735
+
+Recover the plaintext. (Hint: the plaintext begins with the flag prefix.)

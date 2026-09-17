@@ -1,0 +1,3 @@
+# Challenge artifacts are served byte-for-byte — never apply EOL conversion.
+# A CRLF injected into a pcap, jpg, or zip would corrupt it.
+challenges/** -text
